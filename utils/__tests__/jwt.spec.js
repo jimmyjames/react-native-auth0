@@ -110,8 +110,21 @@ describe('ID token verification tests', () => {
     setupFetchMock();
 
     await expect(verify(credentials)).rejects.toHaveProperty(
-      'name',
-      'a0.idtoken.invalid_exp_claim'
+      'message',
+      'Expiration time (exp) claim must be present'
+    );
+  });
+
+  it('fails when "exp" is not a number', async () => {
+    const testJwt = createJwt({ exp: 'this is a string' });
+    // const jwks = getJWKS();
+    const credentials = getCredentials(testJwt);
+
+    setupFetchMock();
+
+    await expect(verify(credentials)).rejects.toHaveProperty(
+      'message',
+      'Expiration time (exp) claim must be present'
     );
   });
 
@@ -136,8 +149,8 @@ describe('ID token verification tests', () => {
     setupFetchMock();
 
     await expect(verify(credentials)).rejects.toHaveProperty(
-      'name',
-      'a0.idtoken.invalid_issuer_claim'
+      'message',
+      'Issuer (iss) claim must be present'
     );
   });
 
@@ -149,8 +162,8 @@ describe('ID token verification tests', () => {
     setupFetchMock();
 
     await expect(verify(credentials)).rejects.toHaveProperty(
-      'name',
-      'a0.idtoken.invalid_issuer_claim'
+      'message',
+      `Issuer (iss) claim mismatch; expected "https://${BASE_EXPECTATIONS.domain}/", found "some.other.issuer"`
     );
   });
 
@@ -175,8 +188,8 @@ describe('ID token verification tests', () => {
     setupFetchMock();
 
     await expect(verify(credentials)).rejects.toHaveProperty(
-      'name',
-      'a0.idtoken.invalid_aud_claim'
+      'message',
+      'Audience (aud) claim must be present'
     );
   });
 
@@ -188,8 +201,8 @@ describe('ID token verification tests', () => {
     setupFetchMock();
 
     await expect(verify(credentials)).rejects.toHaveProperty(
-      'name',
-      'a0.idtoken.invalid_aud_claim'
+      'message',
+      `Audience (aud) claim mismatch; expected "${BASE_EXPECTATIONS.clientId}" but found "${BASE_EXPECTATIONS.clientIdAlt}"`
     );
   });
 
@@ -201,8 +214,8 @@ describe('ID token verification tests', () => {
     setupFetchMock();
 
     await expect(verify(credentials)).rejects.toHaveProperty(
-      'name',
-      'a0.idtoken.invalid_aud_claim'
+      'message',
+      `Audience (aud) claim mismatch; expected "${BASE_EXPECTATIONS.clientId}" but was not one of "${BASE_EXPECTATIONS.clientIdAlt}"`
     );
   });
 
@@ -214,8 +227,21 @@ describe('ID token verification tests', () => {
     setupFetchMock();
 
     await expect(verify(credentials)).rejects.toHaveProperty(
-      'name',
-      'a0.idtoken.invalid_azp_claim'
+      'message',
+      'Authorized Party (azp) claim must be present when Audience (aud) claim has multiple values'
+    );
+  });
+
+  it('fails when "aud" is array with multiple items, and azp does not match client ID', async () => {
+    const testJwt = createJwt({ azp: BASE_EXPECTATIONS.clientIdAlt });
+    const jwks = getJWKS();
+    const credentials = getCredentials(testJwt);
+
+    setupFetchMock();
+
+    await expect(verify(credentials)).rejects.toHaveProperty(
+      'message',
+      `Authorized Party (azp) claim mismatch; expected "${BASE_EXPECTATIONS.clientId}", found "${BASE_EXPECTATIONS.clientIdAlt}"`
     );
   });
 
@@ -230,7 +256,27 @@ describe('ID token verification tests', () => {
       verify(credentials, {
         maxAge: 200
       })
-    ).rejects.toHaveProperty('name', 'a0.idtoken.invalid_auth_time_claim');
+    ).rejects.toHaveProperty(
+      'message',
+      'Authentication Time (auth_time) claim must be present when Max Age (max_age) is specified'
+    );
+  });
+
+  it('fails when "max_age" was sent on the authentication request but "auth_time" is not a number', async () => {
+    const testJwt = createJwt({ auth_time: 'this is a string' });
+    const jwks = getJWKS();
+    const credentials = getCredentials(testJwt);
+
+    setupFetchMock();
+
+    await expect(
+      verify(credentials, {
+        maxAge: 200
+      })
+    ).rejects.toHaveProperty(
+      'message',
+      'Authentication Time (auth_time) claim must be present when Max Age (max_age) is specified'
+    );
   });
 
   it('fails when "max_age" was sent on the authentication request but "auth_time" is invalid', async () => {
@@ -244,7 +290,7 @@ describe('ID token verification tests', () => {
       verify(credentials, {
         maxAge: 1
       })
-    ).rejects.toHaveProperty('name', 'a0.idtoken.invalid_max_age_claim');
+    ).rejects.toHaveProperty('name', 'a0.idtoken.invalid_auth_time_claim');
   });
 
   it('fails when "nonce" sent on authentication request but missing from token claims', async () => {
@@ -255,8 +301,8 @@ describe('ID token verification tests', () => {
     setupFetchMock();
 
     await expect(verify(credentials)).rejects.toHaveProperty(
-      'name',
-      'a0.idtoken.invalid_nonce_claim'
+      'message',
+      'Nonce (nonce) claim must be present'
     );
   });
 
@@ -271,7 +317,10 @@ describe('ID token verification tests', () => {
       verify(credentials, {
         nonce: 'nonce-on-authrequest'
       })
-    ).rejects.toHaveProperty('name', 'a0.idtoken.invalid_nonce_claim');
+    ).rejects.toHaveProperty(
+      'message',
+      `Nonce (nonce) claim mismatch; expected "nonce-on-authrequest", found "${BASE_EXPECTATIONS.nonce}"`
+    );
   });
 
   it('fails when "iat" is missing', async () => {
@@ -282,8 +331,21 @@ describe('ID token verification tests', () => {
     setupFetchMock();
 
     await expect(verify(credentials)).rejects.toHaveProperty(
-      'name',
-      'a0.idtoken.invalid_iat_claim'
+      'message',
+      'Issued At (iat) claim must be present'
+    );
+  });
+
+  it('fails when "iat" is not a number', async () => {
+    const testJwt = createJwt({ iat: 'this is a string' });
+    const jwks = getJWKS();
+    const credentials = getCredentials(testJwt);
+
+    setupFetchMock();
+
+    await expect(verify(credentials)).rejects.toHaveProperty(
+      'message',
+      'Issued At (iat) claim must be present'
     );
   });
 
