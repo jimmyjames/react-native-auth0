@@ -124,11 +124,11 @@ const getJwkFromUri = uri => {
 
 const validateClaims = (decoded, opts) => {
   // Issuer
-  if (!decoded.iss) {
+  if (typeof decoded.iss !== 'string') {
     return Promise.reject(
       idTokenError({
         error: 'missing_issuer_claim',
-        desc: 'Issuer (iss) claim must be present'
+        desc: 'Issuer (iss) claim must be a string present in the ID token'
       })
     );
   }
@@ -143,17 +143,17 @@ const validateClaims = (decoded, opts) => {
   }
 
   // Subject
-  if (!decoded.sub) {
+  if (typeof decoded.sub !== 'string') {
     return Promise.reject(
       idTokenError({
         error: 'invlid_sub_claim',
-        desc: '"sub" claim is not present'
+        desc: 'Subject (sub) claim must be a string present in the ID token'
       })
     );
   }
 
   // Audience
-  if (!decoded.aud) {
+  if (!(typeof decoded.aud === 'string' || Array.isArray(decoded.aud))) {
     return Promise.reject(
       idTokenError({
         error: 'missing_aud_claim',
@@ -230,7 +230,7 @@ const validateClaims = (decoded, opts) => {
 
   //Nonce
   if (opts.nonce) {
-    if (!decoded.nonce) {
+    if (typeof decoded.nonce !== 'string') {
       return Promise.reject(
         idTokenError({
           error: 'missing_nonce_claim',
@@ -250,7 +250,7 @@ const validateClaims = (decoded, opts) => {
 
   //Authorized party
   if (Array.isArray(decoded.aud) && decoded.aud.length > 1) {
-    if (!decoded.azp) {
+    if (typeof decoded.azp !== 'string') {
       return Promise.reject(
         idTokenError({
           error: 'missing_azp_claim',

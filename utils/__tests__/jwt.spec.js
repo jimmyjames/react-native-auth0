@@ -150,7 +150,7 @@ describe('ID token verification tests', () => {
 
     await expect(verify(credentials)).rejects.toHaveProperty(
       'message',
-      'Issuer (iss) claim must be present'
+      'Issuer (iss) claim must be a string present in the ID token'
     );
   });
 
@@ -193,6 +193,19 @@ describe('ID token verification tests', () => {
     );
   });
 
+  it('fails when "aud" is not a string or an array', async () => {
+    const testJwt = createJwt({ aud: 42 });
+    const jwks = getJWKS();
+    const credentials = getCredentials(testJwt);
+
+    setupFetchMock();
+
+    await expect(verify(credentials)).rejects.toHaveProperty(
+      'message',
+      'Audience (aud) claim must be present'
+    );
+  });
+
   it('fails when "aud" does not contain the client ID', async () => {
     const testJwt = createJwt({ aud: BASE_EXPECTATIONS.clientIdAlt });
     const jwks = getJWKS();
@@ -221,6 +234,19 @@ describe('ID token verification tests', () => {
 
   it('fails when "aud" is array with multiple items, and azp is missing', async () => {
     const testJwt = createJwt({ azp: undefined });
+    const jwks = getJWKS();
+    const credentials = getCredentials(testJwt);
+
+    setupFetchMock();
+
+    await expect(verify(credentials)).rejects.toHaveProperty(
+      'message',
+      'Authorized Party (azp) claim must be present when Audience (aud) claim has multiple values'
+    );
+  });
+
+  it('fails when "aud" is array with multiple items, and azp is not a string', async () => {
+    const testJwt = createJwt({ azp: 23 });
     const jwks = getJWKS();
     const credentials = getCredentials(testJwt);
 
