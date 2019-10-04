@@ -1,9 +1,7 @@
 import AuthError from '../auth/authError';
-import { KEYUTIL, KJUR } from 'jsrsasign';
-const jwtDecoder = require('jwt-decode');
+import { verifySignature } from './signatureVerifier';
 
 const DEFAULT_LEEWAY = 60; //default clock-skew, in seconds
-const ALLOWED_ALGORITHMS = ['RS256', 'HS256'];
 
 export const verifyToken = (credentials, clientInfo) => {
   if (!tokenValidationRequired(credentials, clientInfo)) {
@@ -23,70 +21,6 @@ export const verifyToken = (credentials, clientInfo) => {
     .then(() => Promise.resolve(credentials));
 };
 
-const verifySignature = (credentials, clientInfo) => {
-  let header, payload;
-
-  try {
-    header = jwtDecoder(credentials.idToken, { header: true });
-    payload = jwtDecoder(credentials.idToken);
-  } catch (err) {
-    return Promise.reject(
-      idTokenError({
-        error: 'token_decoding_error',
-        desc: 'Error decoding token'
-      })
-    );
-  }
-
-  const alg = header.alg;
-
-  if (!ALLOWED_ALGORITHMS.includes(alg)) {
-    return Promise.reject(
-      idTokenError({
-        error: 'invalid_algorithm',
-        desc: 'Token signing algorithm must be either RS256 or HS256'
-      })
-    );
-  }
-
-  // HS256 tokens require private key, which cannot be stored securely in public clients.
-  // Since the ID token exchange is done via CODE with PKCE flow, skip signature verification in this case.
-  if (alg === 'HS256') {
-    return Promise.resolve(payload);
-  }
-
-  return getJwk(clientInfo.domain, header.kid)
-    .then(jwk => {
-      const pubKey = KEYUTIL.getKey(jwk);
-      const signatureValid = KJUR.jws.JWS.verify(credentials.idToken, pubKey, [
-        'RS256'
-      ]);
-
-      if (signatureValid) {
-        return Promise.resolve(payload);
-      } else {
-        return Promise.reject(
-          idTokenError({
-            error: 'invalid_signature',
-            desc: 'Token signature is not valid'
-          })
-        );
-      }
-    })
-    .catch(err => {
-      if (err.json && err.status === 0) {
-        return Promise.reject(err);
-      } else {
-        return Promise.reject(
-          idTokenError({
-            error: 'key_retrieval_error',
-            desc: 'Unable to retrieve public keyset needed to verify token'
-          })
-        );
-      }
-    });
-};
-
 const tokenValidationRequired = (credentials, clientInfo) => {
   // If client did not specify scope of "openid", we do not expect an ID token thus no validation is needed
   if (clientInfo.scope && typeof clientInfo.scope === 'string') {
@@ -96,30 +30,6 @@ const tokenValidationRequired = (credentials, clientInfo) => {
     }
   }
   return false;
-};
-
-const getJwk = (domain, kid) => {
-  return getJwksUri(domain)
-    .then(uri => getJwkFromUri(uri))
-    .then(jwk => {
-      const keys = jwk.keys;
-      const key = keys
-        .filter(
-          k => k.use === 'sig' && k.kty === 'RSA' && k.kid && (k.n && k.e)
-        )
-        .find(k => k.kid == kid);
-      return Promise.resolve(key);
-    });
-};
-
-const getJwksUri = domain => {
-  return fetch(`https://${domain}/.well-known/openid-configuration`)
-    .then(resp => resp.json())
-    .then(openIdConfig => openIdConfig.jwks_uri);
-};
-
-const getJwkFromUri = uri => {
-  return fetch(uri).then(resp => resp.json());
 };
 
 const validateClaims = (decoded, opts) => {
@@ -181,7 +91,7 @@ const validateClaims = (decoded, opts) => {
   }
 
   //--Time validation (epoch)--
-  const now = new Date();
+  const now = opts._clock ? opts._clock : new Date();
   const leeway = typeof opts.leeway === 'number' ? opts.leeway : DEFAULT_LEEWAY;
 
   //Expires at
