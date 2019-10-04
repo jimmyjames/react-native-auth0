@@ -3,7 +3,7 @@ import { NativeModules, Platform } from 'react-native';
 
 import url from 'url';
 import AuthError from '../auth/authError';
-import { verifyToken } from '../jwt';
+import verifyToken from '../jwt';
 
 const { A0Auth0 } = NativeModules;
 
