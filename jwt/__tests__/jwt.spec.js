@@ -289,10 +289,10 @@ describe('id token verification tests', () => {
       setupSignatureMock(testJwt);
 
       // default leeway of 60 seconds
-      let clock = new Date('2019-9-01');
+      const clock = new Date('2019-9-01');
       clock.setSeconds(clock.getSeconds() + 61);
 
-      let overrides = {
+      const overrides = {
         _clock: clock
       };
 
@@ -310,10 +310,10 @@ describe('id token verification tests', () => {
       setupSignatureMock(testJwt);
 
       // default leeway of 60 seconds
-      let clock = new Date('2019-9-01');
+      const clock = new Date('2019-9-01');
       clock.setSeconds(clock.getSeconds() + 59);
 
-      let overrides = {
+      const overrides = {
         _clock: clock
       };
 
@@ -329,11 +329,11 @@ describe('id token verification tests', () => {
 
       setupSignatureMock(testJwt);
 
-      let clock = new Date('2019-9-01');
+      const clock = new Date('2019-9-01');
       clock.setSeconds(clock.getSeconds() + 121);
 
       // set custom leeway of 120 seconds
-      let overrides = {
+      const overrides = {
         leeway: 120,
         _clock: clock
       };
@@ -351,10 +351,10 @@ describe('id token verification tests', () => {
 
       setupSignatureMock(testJwt);
 
-      let clock = new Date('2019-9-01');
+      const clock = new Date('2019-9-01');
       clock.setSeconds(clock.getSeconds() + 119);
 
-      let overrides = {
+      const overrides = {
         leeway: 120,
         _clock: clock
       };
@@ -398,10 +398,10 @@ describe('id token verification tests', () => {
       setupSignatureMock(testJwt);
 
       // default leeway is 60 seconds
-      let clock = new Date('2019-9-03');
+      const clock = new Date('2019-9-03');
       clock.setSeconds(clock.getSeconds() - 61);
 
-      let overrides = {
+      const overrides = {
         _clock: clock
       };
 
@@ -419,10 +419,10 @@ describe('id token verification tests', () => {
       setupSignatureMock(testJwt);
 
       // default leeway is 60 seconds
-      let clock = new Date('2019-9-03');
+      const clock = new Date('2019-9-03');
       clock.setSeconds(clock.getSeconds() - 59);
 
-      let overrides = {
+      const overrides = {
         _clock: clock
       };
 
@@ -439,10 +439,10 @@ describe('id token verification tests', () => {
       setupSignatureMock(testJwt);
 
       // custom leeway is 60 seconds
-      let clock = new Date('2019-9-03');
+      const clock = new Date('2019-9-03');
       clock.setSeconds(clock.getSeconds() - 121);
 
-      let overrides = {
+      const overrides = {
         leeway: 120,
         _clock: clock
       };
@@ -461,10 +461,10 @@ describe('id token verification tests', () => {
       setupSignatureMock(testJwt);
 
       // custom leeway is 120 seconds
-      let clock = new Date('2019-9-03');
+      const clock = new Date('2019-9-03');
       clock.setSeconds(clock.getSeconds() - 119);
 
-      let overrides = {
+      const overrides = {
         leeway: 120,
         _clock: clock
       };
@@ -581,8 +581,8 @@ describe('id token verification tests', () => {
 
       setupSignatureMock(testJwt);
 
-      let maxAge = 120;
-      let clock = new Date('2019-9-1');
+      const maxAge = 120;
+      const clock = new Date('2019-9-1');
       // default leeway 60 secondds
       clock.setSeconds(clock.getSeconds() + maxAge + 61);
 
@@ -601,8 +601,8 @@ describe('id token verification tests', () => {
 
       setupSignatureMock(testJwt);
 
-      let maxAge = 120;
-      let clock = new Date('2019-9-1');
+      const maxAge = 120;
+      const clock = new Date('2019-9-1');
       // default leeway 60 secondds
       clock.setSeconds(clock.getSeconds() + maxAge + 59);
 
@@ -621,8 +621,8 @@ describe('id token verification tests', () => {
 
       setupSignatureMock(testJwt);
 
-      let maxAge = 120;
-      let clock = new Date('2019-9-1');
+      const maxAge = 120;
+      const clock = new Date('2019-9-1');
       // custom leeway 120 secondds
       clock.setSeconds(clock.getSeconds() + maxAge + 121);
 
@@ -642,8 +642,8 @@ describe('id token verification tests', () => {
 
       setupSignatureMock(testJwt);
 
-      let maxAge = 120;
-      let clock = new Date('2019-9-1');
+      const maxAge = 120;
+      const clock = new Date('2019-9-1');
       // custom leeway 120 secondds
       clock.setSeconds(clock.getSeconds() + maxAge + 119);
 
