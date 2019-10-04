@@ -1,4 +1,4 @@
-import { verifyToken } from '../';
+import verifyToken from '../index';
 import fetchMock from 'fetch-mock';
 import * as signatureVerifier from '../signatureVerifier';
 const jwtDecoder = require('jwt-decode');

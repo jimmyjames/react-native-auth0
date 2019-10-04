@@ -1,3 +1,3 @@
 import { verifyToken } from './validator';
 
-exports.verifyToken = verifyToken;
+export default verifyToken;
