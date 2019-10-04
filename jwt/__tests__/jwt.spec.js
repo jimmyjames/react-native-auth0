@@ -29,7 +29,7 @@ describe('id token verification tests', () => {
       const credentials = getCredentials();
       await expect(verify(credentials)).rejects.toHaveProperty(
         'name',
-        'a0.idtoken.verification_error'
+        'a0.idtoken.missing_id_token'
       );
     });
 
@@ -146,8 +146,8 @@ describe('id token verification tests', () => {
       setupSignatureMock(testJwt);
 
       await expect(verify(credentials)).rejects.toHaveProperty(
-        'message',
-        'Issuer (iss) claim must be a string present in the ID token'
+        'name',
+        'a0.idtoken.missing_issuer_claim'
       );
     });
 
@@ -159,8 +159,8 @@ describe('id token verification tests', () => {
       setupSignatureMock(testJwt);
 
       await expect(verify(credentials)).rejects.toHaveProperty(
-        'message',
-        'Issuer (iss) claim must be a string present in the ID token'
+        'name',
+        'a0.idtoken.missing_issuer_claim'
       );
     });
 
@@ -186,7 +186,7 @@ describe('id token verification tests', () => {
 
       await expect(verify(credentials)).rejects.toHaveProperty(
         'name',
-        'a0.idtoken.invlid_sub_claim'
+        'a0.idtoken.missing_subject_claim'
       );
     });
 
@@ -199,7 +199,7 @@ describe('id token verification tests', () => {
 
       await expect(verify(credentials)).rejects.toHaveProperty(
         'name',
-        'a0.idtoken.invlid_sub_claim'
+        'a0.idtoken.missing_subject_claim'
       );
     });
 
@@ -211,8 +211,8 @@ describe('id token verification tests', () => {
       setupSignatureMock(testJwt);
 
       await expect(verify(credentials)).rejects.toHaveProperty(
-        'message',
-        'Audience (aud) claim must be present'
+        'name',
+        'a0.idtoken.missing_audience_claim'
       );
     });
 
@@ -224,8 +224,8 @@ describe('id token verification tests', () => {
       setupSignatureMock(testJwt);
 
       await expect(verify(credentials)).rejects.toHaveProperty(
-        'message',
-        'Audience (aud) claim must be present'
+        'name',
+        'a0.idtoken.missing_audience_claim'
       );
     });
 
@@ -237,8 +237,8 @@ describe('id token verification tests', () => {
       setupSignatureMock(testJwt);
 
       await expect(verify(credentials)).rejects.toHaveProperty(
-        'message',
-        `Audience (aud) claim mismatch; expected "${BASE_EXPECTATIONS.clientId}" but found "${BASE_EXPECTATIONS.clientIdAlt}"`
+        'name',
+        'a0.idtoken.invalid_audience_claim'
       );
     });
 
@@ -250,8 +250,8 @@ describe('id token verification tests', () => {
       setupSignatureMock(testJwt);
 
       await expect(verify(credentials)).rejects.toHaveProperty(
-        'message',
-        `Audience (aud) claim mismatch; expected "${BASE_EXPECTATIONS.clientId}" but was not one of "${BASE_EXPECTATIONS.clientIdAlt}"`
+        'name',
+        'a0.idtoken.invalid_audience_claim'
       );
     });
 
@@ -263,8 +263,8 @@ describe('id token verification tests', () => {
       setupSignatureMock(testJwt);
 
       await expect(verify(credentials)).rejects.toHaveProperty(
-        'message',
-        'Expiration time (exp) claim must be present'
+        'name',
+        'a0.idtoken.missing_expires_at_claim'
       );
     });
 
@@ -276,8 +276,8 @@ describe('id token verification tests', () => {
       setupSignatureMock(testJwt);
 
       await expect(verify(credentials)).rejects.toHaveProperty(
-        'message',
-        'Expiration time (exp) claim must be present'
+        'name',
+        'a0.idtoken.missing_expires_at_claim'
       );
     });
 
@@ -298,7 +298,7 @@ describe('id token verification tests', () => {
 
       await expect(verify(credentials, overrides)).rejects.toHaveProperty(
         'name',
-        'a0.idtoken.invalid_exp_claim'
+        'a0.idtoken.invalid_expires_at_claim'
       );
     });
 
@@ -340,7 +340,7 @@ describe('id token verification tests', () => {
 
       await expect(verify(credentials, overrides)).rejects.toHaveProperty(
         'name',
-        'a0.idtoken.invalid_exp_claim'
+        'a0.idtoken.invalid_expires_at_claim'
       );
     });
 
@@ -372,8 +372,8 @@ describe('id token verification tests', () => {
       setupSignatureMock(testJwt);
 
       await expect(verify(credentials)).rejects.toHaveProperty(
-        'message',
-        'Issued At (iat) claim must be present'
+        'name',
+        'a0.idtoken.missing_issued_at_claim'
       );
     });
 
@@ -385,8 +385,8 @@ describe('id token verification tests', () => {
       setupSignatureMock(testJwt);
 
       await expect(verify(credentials)).rejects.toHaveProperty(
-        'message',
-        'Issued At (iat) claim must be present'
+        'name',
+        'a0.idtoken.missing_issued_at_claim'
       );
     });
 
@@ -407,7 +407,7 @@ describe('id token verification tests', () => {
 
       await expect(verify(credentials, overrides)).rejects.toHaveProperty(
         'name',
-        'a0.idtoken.invalid_iat_claim'
+        'a0.idtoken.invalid_issued_at_claim'
       );
     });
 
@@ -449,7 +449,7 @@ describe('id token verification tests', () => {
 
       await expect(verify(credentials, overrides)).rejects.toHaveProperty(
         'name',
-        'a0.idtoken.invalid_iat_claim'
+        'a0.idtoken.invalid_issued_at_claim'
       );
     });
 
@@ -482,8 +482,8 @@ describe('id token verification tests', () => {
       setupSignatureMock(testJwt);
 
       await expect(verify(credentials)).rejects.toHaveProperty(
-        'message',
-        'Nonce (nonce) claim must be present'
+        'name',
+        'a0.idtoken.missing_nonce_claim'
       );
     });
 
@@ -509,8 +509,8 @@ describe('id token verification tests', () => {
       setupSignatureMock(testJwt);
 
       await expect(verify(credentials)).rejects.toHaveProperty(
-        'message',
-        'Authorized Party (azp) claim must be present when Audience (aud) claim has multiple values'
+        'name',
+        'a0.idtoken.missing_authorized_party_claim'
       );
     });
 
@@ -522,8 +522,8 @@ describe('id token verification tests', () => {
       setupSignatureMock(testJwt);
 
       await expect(verify(credentials)).rejects.toHaveProperty(
-        'message',
-        'Authorized Party (azp) claim must be present when Audience (aud) claim has multiple values'
+        'name',
+        'a0.idtoken.missing_authorized_party_claim'
       );
     });
 
@@ -535,8 +535,8 @@ describe('id token verification tests', () => {
       setupSignatureMock(testJwt);
 
       await expect(verify(credentials)).rejects.toHaveProperty(
-        'message',
-        `Authorized Party (azp) claim mismatch; expected "${BASE_EXPECTATIONS.clientId}", found "${BASE_EXPECTATIONS.clientIdAlt}"`
+        'name',
+        'a0.idtoken.invalid_authorized_party_claim'
       );
     });
 
@@ -552,8 +552,8 @@ describe('id token verification tests', () => {
           maxAge: 200
         })
       ).rejects.toHaveProperty(
-        'message',
-        'Authentication Time (auth_time) claim must be present when Max Age (max_age) is specified'
+        'name',
+        'a0.idtoken.missing_authorization_time_claim'
       );
     });
 
@@ -569,8 +569,8 @@ describe('id token verification tests', () => {
           maxAge: 200
         })
       ).rejects.toHaveProperty(
-        'message',
-        'Authentication Time (auth_time) claim must be present when Max Age (max_age) is specified'
+        'name',
+        'a0.idtoken.missing_authorization_time_claim'
       );
     });
 
@@ -591,7 +591,10 @@ describe('id token verification tests', () => {
           maxAge,
           _clock: clock
         })
-      ).rejects.toHaveProperty('name', 'a0.idtoken.invalid_auth_time_claim');
+      ).rejects.toHaveProperty(
+        'name',
+        'a0.idtoken.invalid_authorization_time_claim'
+      );
     });
 
     it('succeeds when "max_age" was sent on the authentication request but "auth_time" and within default leeway', async () => {
@@ -632,7 +635,10 @@ describe('id token verification tests', () => {
           _clock: clock,
           leeway: 120
         })
-      ).rejects.toHaveProperty('name', 'a0.idtoken.invalid_auth_time_claim');
+      ).rejects.toHaveProperty(
+        'name',
+        'a0.idtoken.invalid_authorization_time_claim'
+      );
     });
 
     it('succeeds when "max_age" was sent on the authentication request but "auth_time" and within custom leeway', async () => {

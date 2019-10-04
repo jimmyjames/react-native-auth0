@@ -11,7 +11,8 @@ export const verifyToken = (credentials, clientInfo) => {
   if (!credentials.idToken) {
     return Promise.reject(
       idTokenError({
-        desc: 'ID token missing'
+        error: 'missing_id_token',
+        desc: 'ID token is required but missing'
       })
     );
   }
@@ -56,7 +57,7 @@ const validateClaims = (decoded, opts) => {
   if (typeof decoded.sub !== 'string') {
     return Promise.reject(
       idTokenError({
-        error: 'invlid_sub_claim',
+        error: 'missing_subject_claim',
         desc: 'Subject (sub) claim must be a string present in the ID token'
       })
     );
@@ -66,8 +67,9 @@ const validateClaims = (decoded, opts) => {
   if (!(typeof decoded.aud === 'string' || Array.isArray(decoded.aud))) {
     return Promise.reject(
       idTokenError({
-        error: 'missing_aud_claim',
-        desc: 'Audience (aud) claim must be present'
+        error: 'missing_audience_claim',
+        desc:
+          'Audience (aud) claim must be a string or array of strings present in the ID token'
       })
     );
   }
@@ -75,7 +77,7 @@ const validateClaims = (decoded, opts) => {
   if (Array.isArray(decoded.aud) && !decoded.aud.includes(opts.clientId)) {
     return Promise.reject(
       idTokenError({
-        error: 'invalid_aud_claim',
+        error: 'invalid_audience_claim',
         desc: `Audience (aud) claim mismatch; expected "${
           opts.clientId
         }" but was not one of "${decoded.aud.join(', ')}"`
@@ -84,7 +86,7 @@ const validateClaims = (decoded, opts) => {
   } else if (typeof decoded.aud === 'string' && decoded.aud !== opts.clientId) {
     return Promise.reject(
       idTokenError({
-        error: 'invalid_aud_claim',
+        error: 'invalid_audience_claim',
         desc: `Audience (aud) claim mismatch; expected "${opts.clientId}" but found "${decoded.aud}"`
       })
     );
@@ -98,8 +100,9 @@ const validateClaims = (decoded, opts) => {
   if (typeof decoded.exp !== 'number') {
     return Promise.reject(
       idTokenError({
-        error: 'missing_exp_claim',
-        desc: 'Expiration time (exp) claim must be present'
+        error: 'missing_expires_at_claim',
+        desc:
+          'Expiration Time (exp) claim must be a number present in the ID token'
       })
     );
   }
@@ -109,7 +112,7 @@ const validateClaims = (decoded, opts) => {
   if (now > expDate) {
     return Promise.reject(
       idTokenError({
-        error: 'invalid_exp_claim',
+        error: 'invalid_expires_at_claim',
         desc: `Expiration Time (exp) claim error; current time (${now.getTime() /
           1000}) is after expiration time (${decoded.exp + leeway})`
       })
@@ -120,8 +123,8 @@ const validateClaims = (decoded, opts) => {
   if (typeof decoded.iat !== 'number') {
     return Promise.reject(
       idTokenError({
-        error: 'missing_iat_claim',
-        desc: 'Issued At (iat) claim must be present'
+        error: 'missing_issued_at_claim',
+        desc: 'Issued At (iat) claim must be a number present in the ID token'
       })
     );
   }
@@ -131,7 +134,7 @@ const validateClaims = (decoded, opts) => {
   if (now < iatDate) {
     return Promise.reject(
       idTokenError({
-        error: 'invalid_iat_claim',
+        error: 'invalid_issued_at_claim',
         desc: `Issued At (iat) claim error; current time (${now.getTime() /
           1000}) is before issued at time (${decoded.iat - leeway})`
       })
@@ -144,7 +147,7 @@ const validateClaims = (decoded, opts) => {
       return Promise.reject(
         idTokenError({
           error: 'missing_nonce_claim',
-          desc: 'Nonce (nonce) claim must be present'
+          desc: 'Nonce (nonce) claim must be a string present in the ID token'
         })
       );
     }
@@ -163,9 +166,9 @@ const validateClaims = (decoded, opts) => {
     if (typeof decoded.azp !== 'string') {
       return Promise.reject(
         idTokenError({
-          error: 'missing_azp_claim',
+          error: 'missing_authorized_party_claim',
           desc:
-            'Authorized Party (azp) claim must be present when Audience (aud) claim has multiple values'
+            'Authorized Party (azp) claim must be a string present in the ID token when Audience (aud) claim has multiple values'
         })
       );
     }
@@ -173,7 +176,7 @@ const validateClaims = (decoded, opts) => {
     if (decoded.azp !== opts.clientId) {
       return Promise.reject(
         idTokenError({
-          error: 'invalid_azp_claim',
+          error: 'invalid_authorized_party_claim',
           desc: `Authorized Party (azp) claim mismatch; expected "${opts.clientId}", found "${decoded.azp}"`
         })
       );
@@ -185,9 +188,9 @@ const validateClaims = (decoded, opts) => {
     if (typeof decoded.auth_time !== 'number') {
       return Promise.reject(
         idTokenError({
-          error: 'missing_auth_time_claim',
+          error: 'missing_authorization_time_claim',
           desc:
-            'Authentication Time (auth_time) claim must be present when Max Age (max_age) is specified'
+            'Authentication Time (auth_time) claim must be a number present in the ID token when Max Age (max_age) is specified'
         })
       );
     }
@@ -198,7 +201,7 @@ const validateClaims = (decoded, opts) => {
     if (now > authTimeDate) {
       return Promise.reject(
         idTokenError({
-          error: 'invalid_auth_time_claim',
+          error: 'invalid_authorization_time_claim',
           desc: `Authentication Time (auth_time) claim indicates that too much time has passed since the last end-user authentication. Current time (${now.getTime() /
             1000}) is after last auth at ${authValidUntil}`
         })
