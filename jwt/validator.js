@@ -1,8 +1,15 @@
 import AuthError from '../auth/authError';
 import { verifySignature } from './signatureVerifier';
 
-const DEFAULT_LEEWAY = 60; //default clock-skew, in seconds
+// default clock skew, in seconds
+const DEFAULT_LEEWAY = 60;
 
+/**
+ * Verifies an ID token according to the OIDC spec
+ * @param {Object} credentials the credentials obtained from the token exchange
+ * @param {Object} clientInfo the information about the client required to validate the ID token
+ * @returns {Promise} A promise containing the credentials, or will reject the promise if validation fails
+ */
 export const verifyToken = (credentials, clientInfo) => {
   if (!tokenValidationRequired(credentials, clientInfo)) {
     return Promise.resolve(credentials);
@@ -17,8 +24,13 @@ export const verifyToken = (credentials, clientInfo) => {
     );
   }
 
-  return verifySignature(credentials, clientInfo)
-    .then(decoded => validateClaims(decoded, clientInfo))
+  const sigOptions = {
+    idToken: credentials.idToken,
+    domain: clientInfo.domain
+  };
+
+  return verifySignature(sigOptions)
+    .then(payload => validateClaims(payload, clientInfo))
     .then(() => Promise.resolve(credentials));
 };
 
@@ -33,9 +45,9 @@ const tokenValidationRequired = (credentials, clientInfo) => {
   return false;
 };
 
-const validateClaims = (decoded, opts) => {
+const validateClaims = (payload, opts) => {
   // Issuer
-  if (typeof decoded.iss !== 'string') {
+  if (typeof payload.iss !== 'string') {
     return Promise.reject(
       idTokenError({
         error: 'missing_issuer_claim',
@@ -44,17 +56,19 @@ const validateClaims = (decoded, opts) => {
     );
   }
 
-  if (decoded.iss !== 'https://' + opts.domain + '/') {
+  if (payload.iss !== 'https://' + opts.domain + '/') {
     return Promise.reject(
       idTokenError({
         error: 'invalid_issuer_claim',
-        desc: `Issuer (iss) claim mismatch; expected "https://${opts.domain}/", found "${decoded.iss}"`
+        desc: `Issuer (iss) claim mismatch; expected "https://${
+          opts.domain
+        }/", found "${payload.iss}"`
       })
     );
   }
 
   // Subject
-  if (typeof decoded.sub !== 'string') {
+  if (typeof payload.sub !== 'string') {
     return Promise.reject(
       idTokenError({
         error: 'missing_subject_claim',
@@ -64,7 +78,7 @@ const validateClaims = (decoded, opts) => {
   }
 
   // Audience
-  if (!(typeof decoded.aud === 'string' || Array.isArray(decoded.aud))) {
+  if (!(typeof payload.aud === 'string' || Array.isArray(payload.aud))) {
     return Promise.reject(
       idTokenError({
         error: 'missing_audience_claim',
@@ -74,20 +88,22 @@ const validateClaims = (decoded, opts) => {
     );
   }
 
-  if (Array.isArray(decoded.aud) && !decoded.aud.includes(opts.clientId)) {
+  if (Array.isArray(payload.aud) && !payload.aud.includes(opts.clientId)) {
     return Promise.reject(
       idTokenError({
         error: 'invalid_audience_claim',
         desc: `Audience (aud) claim mismatch; expected "${
           opts.clientId
-        }" but was not one of "${decoded.aud.join(', ')}"`
+        }" but was not one of "${payload.aud.join(', ')}"`
       })
     );
-  } else if (typeof decoded.aud === 'string' && decoded.aud !== opts.clientId) {
+  } else if (typeof payload.aud === 'string' && payload.aud !== opts.clientId) {
     return Promise.reject(
       idTokenError({
         error: 'invalid_audience_claim',
-        desc: `Audience (aud) claim mismatch; expected "${opts.clientId}" but found "${decoded.aud}"`
+        desc: `Audience (aud) claim mismatch; expected "${
+          opts.clientId
+        }" but found "${payload.aud}"`
       })
     );
   }
@@ -97,7 +113,7 @@ const validateClaims = (decoded, opts) => {
   const leeway = typeof opts.leeway === 'number' ? opts.leeway : DEFAULT_LEEWAY;
 
   //Expires at
-  if (typeof decoded.exp !== 'number') {
+  if (typeof payload.exp !== 'number') {
     return Promise.reject(
       idTokenError({
         error: 'missing_expires_at_claim',
@@ -107,20 +123,20 @@ const validateClaims = (decoded, opts) => {
     );
   }
 
-  const expDate = new Date((decoded.exp + leeway) * 1000);
+  const expDate = new Date((payload.exp + leeway) * 1000);
 
   if (now > expDate) {
     return Promise.reject(
       idTokenError({
         error: 'invalid_expires_at_claim',
         desc: `Expiration Time (exp) claim error; current time (${now.getTime() /
-          1000}) is after expiration time (${decoded.exp + leeway})`
+          1000}) is after expiration time (${payload.exp + leeway})`
       })
     );
   }
 
   //Issued at
-  if (typeof decoded.iat !== 'number') {
+  if (typeof payload.iat !== 'number') {
     return Promise.reject(
       idTokenError({
         error: 'missing_issued_at_claim',
@@ -129,21 +145,21 @@ const validateClaims = (decoded, opts) => {
     );
   }
 
-  const iatDate = new Date((decoded.iat - leeway) * 1000);
+  const iatDate = new Date((payload.iat - leeway) * 1000);
 
   if (now < iatDate) {
     return Promise.reject(
       idTokenError({
         error: 'invalid_issued_at_claim',
         desc: `Issued At (iat) claim error; current time (${now.getTime() /
-          1000}) is before issued at time (${decoded.iat - leeway})`
+          1000}) is before issued at time (${payload.iat - leeway})`
       })
     );
   }
 
   //Nonce
   if (opts.nonce) {
-    if (typeof decoded.nonce !== 'string') {
+    if (typeof payload.nonce !== 'string') {
       return Promise.reject(
         idTokenError({
           error: 'missing_nonce_claim',
@@ -151,19 +167,21 @@ const validateClaims = (decoded, opts) => {
         })
       );
     }
-    if (decoded.nonce !== opts.nonce) {
+    if (payload.nonce !== opts.nonce) {
       return Promise.reject(
         idTokenError({
           error: 'invalid_nonce_claim',
-          desc: `Nonce (nonce) claim mismatch; expected "${opts.nonce}", found "${decoded.nonce}"`
+          desc: `Nonce (nonce) claim mismatch; expected "${
+            opts.nonce
+          }", found "${payload.nonce}"`
         })
       );
     }
   }
 
   //Authorized party
-  if (Array.isArray(decoded.aud) && decoded.aud.length > 1) {
-    if (typeof decoded.azp !== 'string') {
+  if (Array.isArray(payload.aud) && payload.aud.length > 1) {
+    if (typeof payload.azp !== 'string') {
       return Promise.reject(
         idTokenError({
           error: 'missing_authorized_party_claim',
@@ -173,11 +191,13 @@ const validateClaims = (decoded, opts) => {
       );
     }
 
-    if (decoded.azp !== opts.clientId) {
+    if (payload.azp !== opts.clientId) {
       return Promise.reject(
         idTokenError({
           error: 'invalid_authorized_party_claim',
-          desc: `Authorized Party (azp) claim mismatch; expected "${opts.clientId}", found "${decoded.azp}"`
+          desc: `Authorized Party (azp) claim mismatch; expected "${
+            opts.clientId
+          }", found "${payload.azp}"`
         })
       );
     }
@@ -185,7 +205,7 @@ const validateClaims = (decoded, opts) => {
 
   //Authentication time
   if (typeof opts.maxAge === 'number') {
-    if (typeof decoded.auth_time !== 'number') {
+    if (typeof payload.auth_time !== 'number') {
       return Promise.reject(
         idTokenError({
           error: 'missing_authorization_time_claim',
@@ -195,7 +215,7 @@ const validateClaims = (decoded, opts) => {
       );
     }
 
-    const authValidUntil = decoded.auth_time + opts.maxAge + leeway;
+    const authValidUntil = payload.auth_time + opts.maxAge + leeway;
     const authTimeDate = new Date(authValidUntil * 1000);
 
     if (now > authTimeDate) {

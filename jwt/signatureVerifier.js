@@ -4,12 +4,21 @@ const jwtDecoder = require('jwt-decode');
 
 const ALLOWED_ALGORITHMS = ['RS256', 'HS256'];
 
-export const verifySignature = (credentials, clientInfo) => {
+/**
+ * Verifies that an ID token is signed with a supported algorithm (HS256 or RS256), and verifies the signature
+ * if signed with RS256.
+ * @param {Object} options required to verify an ID token's signature
+ * @param {String} [options.idToken] the ID token
+ * @param {String} [options.domain] the Auth0 domain of the token's issuer
+ * @returns {Promise} A promise that resolves to the decoced payload of the ID token, or will reject if there
+ * the verification fails.
+ */
+export const verifySignature = options => {
   let header, payload;
 
   try {
-    header = jwtDecoder(credentials.idToken, { header: true });
-    payload = jwtDecoder(credentials.idToken);
+    header = jwtDecoder(options.idToken, { header: true });
+    payload = jwtDecoder(options.idToken);
   } catch (err) {
     return Promise.reject(
       idTokenError({
@@ -31,15 +40,15 @@ export const verifySignature = (credentials, clientInfo) => {
   }
 
   // HS256 tokens require private key, which cannot be stored securely in public clients.
-  // Since the ID token exchange is done via CODE with PKCE flow, skip signature verification in this case.
+  // Since the ID token exchange is done via CODE with PKCE flow, we can skip signature verification in this case.
   if (alg === 'HS256') {
     return Promise.resolve(payload);
   }
 
-  return getJwk(clientInfo.domain, header.kid)
+  return getJwk(options.domain, header.kid)
     .then(jwk => {
       const pubKey = KEYUTIL.getKey(jwk);
-      const signatureValid = KJUR.jws.JWS.verify(credentials.idToken, pubKey, [
+      const signatureValid = KJUR.jws.JWS.verify(options.idToken, pubKey, [
         'RS256'
       ]);
 
